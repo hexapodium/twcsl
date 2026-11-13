@@ -6,7 +6,7 @@
     
     License           : < https://tinyurl.com/s872fb68 >
     
-    Version           : 0.10.0
+    Version           : 0.11.0
     
     SS Version        : 7.1
     
@@ -127,6 +127,62 @@
             
         /* end plus */
         
+      /* begin nested toggles */
+      
+        x-twc-psst-parent svg
+        
+          {
+          
+            fill : var( --twc-psst-toggle-color );
+            height : var( --twc-psst-toggle-size );
+            width : calc( var( --twc-psst-toggle-size ) * 1.66 );
+            
+            }
+            
+        x-twc-psst-parent
+        
+          {
+          
+            align-items : center;
+            display : flex;
+            height : 100%;
+            justify-content : var( --twc-psst-toggle-justify );
+            
+            }
+            
+        body:not( .sqs-is-page-editing ) x-twc-psst-parent,
+        body:not( .sqs-is-page-editing ) .twc-psst-nested-parent
+        
+          {
+          
+            cursor : pointer;
+            
+            }
+            
+        body:not( .sqs-is-page-editing ) .twc-psst-nested-parent .sqs-block-code .sqs-block-content {
+        
+          height : 100%;
+          
+          }
+          
+        body:not( .sqs-is-page-editing ) .twc-psst--open x-twc-psst-parent .twc-psst-arrow
+        
+          {
+          
+            transform : rotate( 180deg );
+            
+            }
+            
+        body:not( .sqs-is-page-editing ) .twc-psst--open x-twc-psst-parent .twc-psst-plus use:nth-child( 2 )
+        
+          {
+          
+            display : none;
+            
+            }
+            
+        /* end nested toggles */
+        
       /* end toggles */
       
     </style>
@@ -165,7 +221,7 @@
     
       const
       
-        version = '0.10.0',
+        version = '0.11.0',
       
         s = `
         
@@ -622,6 +678,164 @@
         );
         
       gotoAnchorLink ( );
+      
+      // begin nested toggles
+      //
+      // child section : <x-twc-psst-child data-id="b1"></x-twc-psst-child>
+      // parent section: <x-twc-psst-parent data-children="b1 b2"></x-twc-psst-parent>
+      // (optional data-open on the parent). a section can be both.
+      
+      {
+      
+        const
+        
+          pageSectionSelector = '#page ' + sectionSelector,
+          
+          sectionsById = { },
+          
+          childrenKey = 'twcPsstChildren';
+          
+        $( `${ pageSectionSelector } x-${ codeKey }-child` ).each (
+        
+          function ( ) {
+          
+            const id = ( $( this ).attr ( 'data-id' ) || '' ).trim ( );
+            
+            if ( id )
+            
+              sectionsById [ id ] = $( this ).parents ( sectionSelector ).first ( );
+              
+            }
+            
+          );
+          
+        const
+        
+          isChild = [ ],
+          
+          closeTree = ( $section ) => {
+          
+            $section.removeClass ( openClassName );
+            
+            ( $section.data ( childrenKey ) || [ ] ).forEach (
+            
+              ( $child ) => {
+              
+                $child.stop ( true, true ).slideUp ( duration );
+                
+                closeTree ( $child );
+                
+                }
+                
+              );
+              
+            };
+            
+        $( `${ pageSectionSelector } x-${ codeKey }-parent` ).each (
+        
+          function ( ) {
+          
+            const
+            
+              $this = $( this ),
+              
+              $section = $this.parents ( sectionSelector ).first ( ),
+              
+              ids = ( $this.attr ( 'data-children' ) || '' )
+              
+                .split ( /[\s,]+/ )
+                
+                .filter ( Boolean ),
+                
+              $children = ids
+              
+                .map ( ( id ) => sectionsById [ id ] )
+                
+                .filter ( ( $s ) => $s && $s.length );
+                
+            $section.data (
+            
+              childrenKey,
+              
+              ( $section.data ( childrenKey ) || [ ] ).concat ( $children )
+              
+              );
+              
+            $section
+            
+              .addClass ( `${ codeKey }-nested-parent` )
+              
+              .data ( 'twcPsstNestedOpen', $this.attr ( 'data-open' ) !== undefined );
+              
+            $children.forEach ( ( $s ) => isChild.push ( $s [ 0 ] ) );
+            
+            $section.click (
+            
+              function ( ) {
+              
+                const isEditing = $( 'body' ).hasClass ( 'sqs-is-page-editing' );
+                
+                // bail if is editing
+                
+                if ( isEditing ) return;
+                
+                const $kids = $section.data ( childrenKey );
+                
+                if ( $section.hasClass ( openClassName ) )
+                
+                  closeTree ( $section );
+                  
+                  else {
+                  
+                    $section.addClass ( openClassName );
+                    
+                    $kids.forEach ( ( $s ) => $s.stop ( true, true ).slideDown ( duration ) );
+                    
+                    }
+                    
+                dispatchEvent ( new Event ( 'resize' ) );
+                
+                }
+                
+              );
+              
+            }
+            
+          );
+          
+        // children start hidden
+        
+        isChild.forEach ( ( el ) => $( el ).css ( 'display', 'none' ) );
+        
+        // open top-level parents flagged data-open
+        
+        $( `.${ codeKey }-nested-parent` ).each (
+        
+          function ( ) {
+          
+            const $this = $( this );
+            
+            if (
+            
+              ! $this.data ( 'twcPsstNestedOpen' )
+              
+              ||
+              
+              isChild.includes ( this )
+              
+              ) return;
+              
+            $this.addClass ( openClassName );
+            
+            $this.data ( childrenKey ).forEach ( ( $s ) => $s.css ( 'display', '' ) );
+            
+            }
+            
+          );
+          
+        }
+        
+      // end nested toggles
       
       // section open when URL hash changes
       

@@ -8,7 +8,7 @@ Add page section toggle effect to pages.
 
 ### Version
 
-  * 0.10.0
+  * 0.11.0
 
 #### SS Version
 
@@ -178,6 +178,106 @@ don't have to scroll up to click and close the section.
   
 Note: If you test the close feature in Preview it will trigger the edit mode.
 
+## Nested toggles
+
+Toggle sections can be nested to build a tree of toggles. Child sections are
+identified by an ID and controlled by a parent section that references that
+ID. This is separate from the toggles above, which work as before.
+
+* Child section
+
+  Add a code block to the section with the following. The data-id value is the
+  ID for the section.
+  
+  ```html
+  <x-twc-psst-child data-id="b1"></x-twc-psst-child>
+  ```
+  
+* Parent section
+
+  Add a code block to the section with one of the following. The data-children
+  attribute is a list of child IDs separated by spaces or commas.
+  
+  * Arrow
+  
+    ```html
+    <x-twc-psst-parent data-children="b1 b2">
+    
+      <svg class="twc-psst-arrow">
+              
+        <use xlink:href="#twc-psst-arrow">
+                
+          </use>
+          
+        </svg>
+        
+      </x-twc-psst-parent>
+    ```
+    
+  * Plus
+  
+    ```html
+    <x-twc-psst-parent data-children="b1 b2">
+    
+      <svg class="twc-psst-plus">
+      
+        <use xlink:href="#twc-psst-plus-horizontal" />
+        
+        <use xlink:href="#twc-psst-plus-vertical" />
+        
+        </svg>
+        
+      </x-twc-psst-parent>
+    ```
+    
+  Set the section height to small and add a text block label the same as for
+  the toggles above.
+  
+* A section can be both a child and a parent by having both tags in its code
+  block(s). This is how you go more than one level deep.
+  
+* Optional Attributes
+
+  * data-open
+  
+    Open the children when the page loads. An example.
+    
+    ```html
+    <x-twc-psst-parent data-children="b1 b2" data-open="true">
+    ```
+    
+    This is ignored when the parent is itself a child.
+    
+* Child sections are hidden until their parent is clicked. Closing a parent
+  also closes everything below it.
+
+* An example tree.
+
+  ```
+  A
+  -1
+  -2
+  -3
+  B
+  -1
+  -2
+  --i
+  --ii
+  C
+  ```
+  
+  * A has `data-children="a1 a2 a3"`. Sections A-1, A-2 and A-3 have
+    `<x-twc-psst-child data-id="a1">`, `a2` and `a3`.
+    
+  * B has `data-children="b1 b2"`. B-1 has `data-id="b1"`. B-2 has
+    `data-id="b2"` and also `<x-twc-psst-parent data-children="b2i b2ii">`.
+    
+  * B-2-i and B-2-ii have `data-id="b2i"` and `data-id="b2ii"`.
+  
+  * C has no tags.
+  
+Note: The **&lt;x-twc-psst-close&gt;** tag does not work with nested toggles.
+
 ## Demo
 
 You can see a [demo of this effect here][9].
@@ -188,6 +288,11 @@ Please consider [making a donation][10].
 
 ## Changes
 
+* **2026-11-13**
+
+  * added nested toggles
+  * bumped version to 0.11.0
+  
 * **2026-03-11**
 
   * added support for anchor links
